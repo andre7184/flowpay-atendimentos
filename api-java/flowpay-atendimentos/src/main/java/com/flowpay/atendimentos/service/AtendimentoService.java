@@ -106,4 +106,12 @@ public class AtendimentoService {
     public int getTamanhoFilaCartoes() { return filaCartoes.size(); }
     public int getTamanhoFilaEmprestimos() { return filaEmprestimos.size(); }
     public int getTamanhoFilaOutros() { return filaOutros.size(); }
+
+    // Método para ser chamado quando um novo atendente entra no sistema
+    public void processarFilaParaNovoAtendente(TimeAtendimento time) {
+        // Como o novo atendente tem 3 vagas livres, tentamos puxar até 3 pessoas da fila
+        for (int i = 0; i < 3; i++) {
+            puxarProximoDaFila(time);
+        }
+    }
 }
