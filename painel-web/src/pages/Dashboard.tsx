@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import api from "../services/api.ts";
 
-// --- Interfaces ---
 interface Atendente {
   id: number;
   nome: string;
@@ -14,6 +13,10 @@ interface Atendimento {
   assunto: string;
   timeDesignado: string;
   status: string;
+  criadoEm?: string;
+  iniciadoEm?: string;
+  finalizadoEm?: string;
+  atendente?: Atendente;
 }
 
 interface ResumoDashboard {
@@ -21,6 +24,7 @@ interface ResumoDashboard {
   totalAtendimentos: number;
   filas: { CARTOES: number; EMPRESTIMOS: number; OUTROS: number };
   atendentes: Atendente[];
+  historico: Atendimento[];
 }
 
 export default function Dashboard() {
@@ -29,19 +33,16 @@ export default function Dashboard() {
     totalAtendimentos: 0,
     filas: { CARTOES: 0, EMPRESTIMOS: 0, OUTROS: 0 },
     atendentes: [],
+    historico: [],
   });
 
   const [listaAtendimentos, setListaAtendimentos] = useState<Atendimento[]>([]);
-
-  // --- Modais ---
   const [modalAtendente, setModalAtendente] = useState(false);
   const [modalAtendimento, setModalAtendimento] = useState(false);
   const [modalGerenciarAtendentes, setModalGerenciarAtendentes] =
     useState(false);
   const [modalGerenciarAtendimentos, setModalGerenciarAtendimentos] =
     useState(false);
-
-  // --- Formulários ---
   const [formAtendente, setFormAtendente] = useState({
     nome: "",
     timeAtendimento: "CARTOES",
@@ -50,8 +51,6 @@ export default function Dashboard() {
     assunto: "",
     time: "CARTOES",
   });
-
-  // --- Toast Alert ---
   const [alerta, setAlerta] = useState({
     visivel: false,
     mensagem: "",
@@ -60,9 +59,10 @@ export default function Dashboard() {
 
   const mostrarAlerta = (mensagem: string, tipo: "sucesso" | "erro") => {
     setAlerta({ visivel: true, mensagem, tipo });
-    setTimeout(() => {
-      setAlerta({ visivel: false, mensagem: "", tipo: "sucesso" });
-    }, 3000);
+    setTimeout(
+      () => setAlerta({ visivel: false, mensagem: "", tipo: "sucesso" }),
+      3000,
+    );
   };
 
   const carregarDados = async () => {
@@ -70,7 +70,7 @@ export default function Dashboard() {
       const response = await api.get<ResumoDashboard>("/dashboard");
       setResumo(response.data);
     } catch (error) {
-      console.error("Erro de conexão com a API Java:", error);
+      console.error(error);
     }
   };
 
@@ -81,10 +81,9 @@ export default function Dashboard() {
         const response = await api.get<ResumoDashboard>("/dashboard");
         if (isMounted) setResumo(response.data);
       } catch (error) {
-        console.error("Erro:", error);
+        console.error(error);
       }
     };
-
     fetchDashboard();
     const intervalo = setInterval(fetchDashboard, 3000);
     return () => {
@@ -93,7 +92,18 @@ export default function Dashboard() {
     };
   }, []);
 
-  // --- Criação (POST) ---
+  // --- Funções de Cálculo de Tempo (SLA) ---
+  const calcularDiferencaTempo = (inicio?: string, fim?: string) => {
+    if (!inicio || !fim) return "-";
+    const diff = Math.floor(
+      (new Date(fim).getTime() - new Date(inicio).getTime()) / 1000,
+    );
+    const m = Math.floor(diff / 60);
+    const s = diff % 60;
+    return `${m}m ${s}s`;
+  };
+
+  // --- POSTs e Actions ---
   const handleCriarAtendente = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -104,7 +114,7 @@ export default function Dashboard() {
       mostrarAlerta("Atendente cadastrado com sucesso!", "sucesso");
     } catch (error) {
       console.error(error);
-      mostrarAlerta("Erro ao cadastrar.", "erro");
+      mostrarAlerta("Erro ao cadastrar o atendente.", "erro");
     }
   };
 
@@ -113,16 +123,14 @@ export default function Dashboard() {
     try {
       await api.post("/atendimentos", formAtendimento);
       setModalAtendimento(false);
-      setFormAtendimento({ assunto: "", time: "CARTOES" });
       carregarDados();
       mostrarAlerta("Cliente na fila!", "sucesso");
     } catch (error) {
       console.error(error);
-      mostrarAlerta("Erro ao registrar atendimento.", "erro");
+      mostrarAlerta("Erro ao cadastrar o atendente.", "erro");
     }
   };
 
-  // --- Listagem e Ações Extras ---
   const abrirModalAtendimentos = async () => {
     try {
       const response = await api.get("/atendimentos");
@@ -130,7 +138,7 @@ export default function Dashboard() {
       setModalGerenciarAtendimentos(true);
     } catch (error) {
       console.error(error);
-      mostrarAlerta("Crie a rota GET /api/atendimentos no backend!", "erro");
+      mostrarAlerta("Erro ao buscar atendimentos.", "erro");
     }
   };
 
@@ -138,22 +146,22 @@ export default function Dashboard() {
     try {
       await api.delete(`/atendentes/${id}`);
       carregarDados();
-      mostrarAlerta("Atendente excluído com sucesso!", "sucesso");
+      mostrarAlerta("Atendente excluído!", "sucesso");
     } catch (error) {
       console.error(error);
-      mostrarAlerta("Erro. O atendente pode ter tickets vinculados.", "erro");
+      mostrarAlerta("Erro ao excluir.", "erro");
     }
   };
 
   const handleEncerrarAtendimento = async (id: number) => {
     try {
       await api.post(`/atendimentos/${id}/finalizar`);
-      carregarDados(); // Atualiza dashboard
-      abrirModalAtendimentos(); // Recarrega a lista da modal
+      carregarDados();
+      abrirModalAtendimentos();
       mostrarAlerta("Atendimento encerrado!", "sucesso");
     } catch (error) {
       console.error(error);
-      mostrarAlerta("Erro ao encerrar atendimento.", "erro");
+      mostrarAlerta("Erro ao encerrar.", "erro");
     }
   };
 
@@ -166,7 +174,6 @@ export default function Dashboard() {
           </h1>
           <p className="text-gray-600">Monitoramento de Filas e Distribuição</p>
         </div>
-
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setModalAtendimento(true)}
@@ -225,7 +232,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Visão Detalhada das Filas */}
+      {/* Visão Detalhada das Filas (AGORA COM TEMPO MÉDIO) */}
       <h2 className="text-xl font-bold text-gray-800 mb-4">
         Filas de Espera por Time
       </h2>
@@ -263,11 +270,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Tabela Resumo */}
+      {/* Tabela de Atendentes */}
       <h2 className="text-xl font-bold text-gray-800 mb-4">
         Status dos Atendentes
       </h2>
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -328,6 +335,79 @@ export default function Dashboard() {
         </table>
       </div>
 
+      {/* NOVA TABELA: Histórico de Atendimentos Realizados */}
+      <h2 className="text-xl font-bold text-gray-800 mb-4">
+        Atendimentos Finalizados
+      </h2>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Ticket
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Assunto
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Atendente
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Tempo na Fila
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Duração Atendimento
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {!resumo.historico ||
+            resumo.historico.filter((a) => a.status === "FINALIZADO").length ===
+              0 ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-6 py-4 text-center text-sm text-gray-500"
+                >
+                  Nenhum atendimento finalizado ainda.
+                </td>
+              </tr>
+            ) : (
+              resumo.historico
+                .filter((a) => a.status === "FINALIZADO")
+                .map((atendimento) => (
+                  <tr
+                    key={atendimento.id}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      #{atendimento.id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {atendimento.assunto}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-600">
+                      {atendimento.atendente?.nome || "Sistema"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-orange-600 font-medium">
+                      {calcularDiferencaTempo(
+                        atendimento.criadoEm,
+                        atendimento.iniciadoEm,
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-emerald-600 font-medium">
+                      {calcularDiferencaTempo(
+                        atendimento.iniciadoEm,
+                        atendimento.finalizadoEm,
+                      )}
+                    </td>
+                  </tr>
+                ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
       {/* --- MODAIS DE CADASTRO --- */}
       {modalAtendente && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -339,39 +419,30 @@ export default function Dashboard() {
               onSubmit={handleCriarAtendente}
               className="flex flex-col gap-4"
             >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full border p-2 rounded"
-                  value={formAtendente.nome}
-                  onChange={(e) =>
-                    setFormAtendente({ ...formAtendente, nome: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Time
-                </label>
-                <select
-                  className="w-full border p-2 rounded"
-                  value={formAtendente.timeAtendimento}
-                  onChange={(e) =>
-                    setFormAtendente({
-                      ...formAtendente,
-                      timeAtendimento: e.target.value,
-                    })
-                  }
-                >
-                  <option value="CARTOES">Cartões</option>
-                  <option value="EMPRESTIMOS">Empréstimos</option>
-                  <option value="OUTROS">Outros Assuntos</option>
-                </select>
-              </div>
+              <input
+                type="text"
+                required
+                className="w-full border p-2 rounded"
+                placeholder="Nome"
+                value={formAtendente.nome}
+                onChange={(e) =>
+                  setFormAtendente({ ...formAtendente, nome: e.target.value })
+                }
+              />
+              <select
+                className="w-full border p-2 rounded"
+                value={formAtendente.timeAtendimento}
+                onChange={(e) =>
+                  setFormAtendente({
+                    ...formAtendente,
+                    timeAtendimento: e.target.value,
+                  })
+                }
+              >
+                <option value="CARTOES">Cartões</option>
+                <option value="EMPRESTIMOS">Empréstimos</option>
+                <option value="OUTROS">Outros Assuntos</option>
+              </select>
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
@@ -402,42 +473,33 @@ export default function Dashboard() {
               onSubmit={handleCriarAtendimento}
               className="flex flex-col gap-4"
             >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Assunto
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full border p-2 rounded"
-                  value={formAtendimento.assunto}
-                  onChange={(e) =>
-                    setFormAtendimento({
-                      ...formAtendimento,
-                      assunto: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Time
-                </label>
-                <select
-                  className="w-full border p-2 rounded"
-                  value={formAtendimento.time}
-                  onChange={(e) =>
-                    setFormAtendimento({
-                      ...formAtendimento,
-                      time: e.target.value,
-                    })
-                  }
-                >
-                  <option value="CARTOES">Problemas com cartão</option>
-                  <option value="EMPRESTIMOS">Contratação de empréstimo</option>
-                  <option value="OUTROS">Outros Assuntos</option>
-                </select>
-              </div>
+              <input
+                type="text"
+                required
+                className="w-full border p-2 rounded"
+                placeholder="Assunto"
+                value={formAtendimento.assunto}
+                onChange={(e) =>
+                  setFormAtendimento({
+                    ...formAtendimento,
+                    assunto: e.target.value,
+                  })
+                }
+              />
+              <select
+                className="w-full border p-2 rounded"
+                value={formAtendimento.time}
+                onChange={(e) =>
+                  setFormAtendimento({
+                    ...formAtendimento,
+                    time: e.target.value,
+                  })
+                }
+              >
+                <option value="CARTOES">Cartões</option>
+                <option value="EMPRESTIMOS">Empréstimos</option>
+                <option value="OUTROS">Outros</option>
+              </select>
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   type="button"
@@ -474,15 +536,6 @@ export default function Dashboard() {
               </button>
             </div>
             <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="text-left py-2 text-sm text-gray-500">ID</th>
-                  <th className="text-left py-2 text-sm text-gray-500">Nome</th>
-                  <th className="text-right py-2 text-sm text-gray-500">
-                    Ação
-                  </th>
-                </tr>
-              </thead>
               <tbody>
                 {resumo.atendentes.map((at) => (
                   <tr key={at.id} className="border-t">
@@ -491,7 +544,7 @@ export default function Dashboard() {
                     <td className="py-2 text-right">
                       <button
                         onClick={() => handleExcluirAtendente(at.id)}
-                        className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                        className="bg-red-500 text-white px-2 py-1 rounded text-sm"
                       >
                         Excluir
                       </button>
@@ -519,20 +572,6 @@ export default function Dashboard() {
               </button>
             </div>
             <table className="min-w-full divide-y divide-gray-200">
-              <thead>
-                <tr>
-                  <th className="text-left py-2 text-sm text-gray-500">ID</th>
-                  <th className="text-left py-2 text-sm text-gray-500">
-                    Assunto
-                  </th>
-                  <th className="text-left py-2 text-sm text-gray-500">
-                    Status
-                  </th>
-                  <th className="text-right py-2 text-sm text-gray-500">
-                    Ação
-                  </th>
-                </tr>
-              </thead>
               <tbody>
                 {listaAtendimentos
                   .filter((a) => a.status !== "FINALIZADO")
@@ -541,9 +580,7 @@ export default function Dashboard() {
                       <td className="py-2">#{at.id}</td>
                       <td className="py-2">{at.assunto}</td>
                       <td className="py-2">
-                        <span
-                          className={`px-2 py-1 text-xs font-bold rounded ${at.status === "EM_ATENDIMENTO" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800"}`}
-                        >
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 text-xs rounded font-bold">
                           {at.status}
                         </span>
                       </td>
@@ -551,7 +588,7 @@ export default function Dashboard() {
                         {at.status === "EM_ATENDIMENTO" && (
                           <button
                             onClick={() => handleEncerrarAtendimento(at.id)}
-                            className="bg-emerald-500 text-white px-2 py-1 rounded text-sm hover:bg-emerald-600"
+                            className="bg-emerald-500 text-white px-2 py-1 rounded text-sm"
                           >
                             Encerrar
                           </button>
@@ -568,7 +605,7 @@ export default function Dashboard() {
       {/* --- TOAST --- */}
       {alerta.visivel && (
         <div
-          className={`fixed bottom-8 right-8 px-6 py-4 rounded-xl shadow-2xl text-white font-medium flex items-center gap-3 z-50 transform transition-all duration-300 ${alerta.tipo === "sucesso" ? "bg-green-500" : "bg-red-500"}`}
+          className={`fixed bottom-8 right-8 px-6 py-4 rounded-xl shadow-2xl text-white font-medium flex items-center gap-3 z-50 transition-all ${alerta.tipo === "sucesso" ? "bg-green-500" : "bg-red-500"}`}
         >
           {alerta.mensagem}
         </div>
