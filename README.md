@@ -66,9 +66,10 @@ Caso queira rodar os serviços fora do Docker:
    ```
    O Painel Web estará disponível em http://localhost:5173.
 
-## 🖥️ Como Executar Manualmente (Modo Desenvolvimento)
+## 🔒 Autenticação e Uso da API
 
 Para interagir com a API utilizando ferramentas como Postman ou Insomnia, é necessário enviar o token de autorização no cabeçalho (Header) da requisição:
+TOKEN PARA TESTES: flowpay-teste-pleno-2026
 
 - Key: Authorization
 - Value: Bearer flowpay-teste-pleno-2026
