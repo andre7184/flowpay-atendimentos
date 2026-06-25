@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import java.time.LocalDateTime;
 
 @Entity
 public class Atendimento {
@@ -14,6 +15,10 @@ public class Atendimento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    private LocalDateTime criadoEm;
+    private LocalDateTime iniciadoEm;
+    private LocalDateTime finalizadoEm;
+
     private String assunto;
     
     @Enumerated(EnumType.STRING)
@@ -34,4 +39,10 @@ public class Atendimento {
     public void setStatus(String status) { this.status = status; }
     public Atendente getAtendente() { return atendente; }
     public void setAtendente(Atendente atendente) { this.atendente = atendente; }
+        public LocalDateTime getCriadoEm() { return criadoEm; }
+    public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
+    public LocalDateTime getIniciadoEm() { return iniciadoEm; }
+    public void setIniciadoEm(LocalDateTime iniciadoEm) { this.iniciadoEm = iniciadoEm; }
+    public LocalDateTime getFinalizadoEm() { return finalizadoEm; }
+    public void setFinalizadoEm(LocalDateTime finalizadoEm) { this.finalizadoEm = finalizadoEm; }
 }

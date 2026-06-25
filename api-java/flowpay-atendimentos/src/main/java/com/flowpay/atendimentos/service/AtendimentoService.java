@@ -8,6 +8,7 @@ import com.flowpay.atendimentos.repository.AtendimentoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -27,6 +28,7 @@ public class AtendimentoService {
 
     public Atendimento registrarAtendimento(String assunto, TimeAtendimento time) {
         Atendimento novo = new Atendimento();
+        novo.setCriadoEm(LocalDateTime.now());
         novo.setAssunto(assunto);
         novo.setTimeDesignado(time);
         novo.setStatus("AGUARDANDO");
@@ -49,6 +51,7 @@ public class AtendimentoService {
                     // Achou atendente!
                     atendimento.setAtendente(atendenteLivre);
                     atendimento.setStatus("EM_ATENDIMENTO");
+                    atendimento.setIniciadoEm(LocalDateTime.now());
                     
                     atendenteLivre.setAtendimentosAtivos(atendenteLivre.getAtendimentosAtivos() + 1);
                     
@@ -77,6 +80,7 @@ public class AtendimentoService {
                 
                 // Finaliza o atendimento atual
                 atendimento.setStatus("FINALIZADO");
+                atendimento.setFinalizadoEm(LocalDateTime.now());
                 Atendente atendente = atendimento.getAtendente();
                 atendente.setAtendimentosAtivos(atendente.getAtendimentosAtivos() - 1);
                 
