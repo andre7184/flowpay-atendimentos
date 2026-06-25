@@ -29,4 +29,14 @@ public class AtendimentoController {
         service.finalizarAtendimento(id);
         return ResponseEntity.ok().build();
     }
+
+    // Adicione esta injeção de dependência no topo da classe:
+    @Autowired
+    private com.flowpay.atendimentos.repository.AtendimentoRepository repository;
+
+    // Adicione este método para listar os tickets no Dashboard
+    @GetMapping
+    public java.util.List<com.flowpay.atendimentos.model.Atendimento> listar() {
+        return repository.findAll();
+    }
 }
