@@ -101,7 +101,7 @@ Principais Endpoints:
 O core de distribuição e gerenciamento de filas no AtendimentoService está coberto por testes unitários com Mockito. Para executá-los:
 
 ```bash
-cd api-java
+cd api-java/flowpay-atendimentos
 mvn test
 ```
 
