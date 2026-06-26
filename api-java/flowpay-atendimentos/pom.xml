@@ -77,6 +77,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/5.11.0/mockito-core-5.11.0.jar</argLine>
 					<excludes>
 						<exclude>
 							<groupId>org.projectlombok</groupId>
@@ -88,6 +89,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.13.0</version> <!-- versão estável que suporta Java 21 -->
+				<configuration>
+					<release>21</release>
+				</configuration>
 				<executions>
 					<execution>
 						<id>default-compile</id>
@@ -100,6 +105,7 @@
 								<path>
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
+									<version>1.18.32</version> <!-- sempre bom fixar a versão -->
 								</path>
 							</annotationProcessorPaths>
 						</configuration>
@@ -115,6 +121,7 @@
 								<path>
 									<groupId>org.projectlombok</groupId>
 									<artifactId>lombok</artifactId>
+									<version>1.18.32</version>
 								</path>
 							</annotationProcessorPaths>
 						</configuration>
