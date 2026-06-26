@@ -1,9 +1,8 @@
-version: "3.8"
-
 services:
   backend:
     build:
-      context: .
+      # Apontando para a pasta exata onde está o projeto Java
+      context: ./api-java/flowpay-atendimentos
       dockerfile: Dockerfile
     container_name: flowpay-api
     ports:
@@ -14,6 +13,7 @@ services:
 
   frontend:
     build:
+      # Apontando para a pasta exata onde está o projeto React
       context: ./painel-web
       dockerfile: Dockerfile
     container_name: flowpay-painel
