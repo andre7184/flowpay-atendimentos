@@ -1,8 +1,23 @@
 import axios from "axios";
 
 const api = axios.create({
-  // Esta é a URL padrão onde o seu Spring Boot (Java) está rodando
   baseURL: "http://localhost:8080/api",
 });
+
+// Interceptor: Adiciona o Token automaticamente em todas as requisições
+api.interceptors.request.use(
+  (config) => {
+    const token = "Bearer token-flowpay-teste";
+
+    if (config.headers) {
+      config.headers.Authorization = token;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
 
 export default api;
