@@ -78,6 +78,16 @@ TOKEN PARA TESTES: token-flowpay-teste
 
 A API foi projetada para garantir a integridade referencial do banco de dados e a manutenção do histórico de métricas (SLA). Por isso, a exclusão de registros essenciais utiliza o padrão de **Soft Delete** (Inativação Lógica).
 
+### 📊 Painel de Controle (`/api/dashboard`)
+
+- **`GET /`**
+  - **Descrição:** Rota centralizada que retorna o consolidado em tempo real de toda a operação, formatado especificamente para renderização rápida no Front-end (BFF - Backend For Frontend).
+  - **Dados Retornados:**
+    - **Métricas Gerais:** Quantidade total de profissionais aptos (ativos) e o volume bruto de atendimentos registrados.
+    - **Monitoramento de Filas:** Contadores independentes mapeando o tamanho da fila de espera para cada time (`CARTOES`, `EMPRESTIMOS`, `OUTROS`).
+    - **Status Operacional:** Lista completa de todos os atendentes (incluindo inativos) informando sua capacidade de carga atual (`atendimentosAtivos / 3`).
+    - **Histórico (SLA):** Tabela completa de tickets para cálculo de tempo médio na fila e tempo líquido de atendimento.
+
 ### 👥 Gestão de Atendentes (`/api/atendentes`)
 
 - **`POST /`**
