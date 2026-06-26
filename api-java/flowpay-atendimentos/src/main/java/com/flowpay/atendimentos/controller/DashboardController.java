@@ -12,28 +12,31 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 
-@RestController
+@RestController // Anota essa classe como um Controller
 @RequestMapping("/api/dashboard")
 @CrossOrigin(origins = "*")
 public class DashboardController {
 
-    @Autowired
+    @Autowired // Injeta o repository aqui
     private AtendenteRepository atendenteRepository;
     
-    @Autowired
+    @Autowired // Injeta o repository aqui
     private AtendimentoRepository atendimentoRepository;
 
-    @Autowired
+    @Autowired // Injeta o service aqui
     private AtendimentoService atendimentoService;
 
-    @GetMapping
+    @GetMapping // Anota essa rota como GET
     public Map<String, Object> getResumo() {
         Map<String, Object> resumo = new HashMap<>();
         
+        // Retorna o total de atendentes e atendimentos
         resumo.put("totalAtendentes", atendenteRepository.count());
         resumo.put("totalAtendimentos", atendimentoRepository.count());
         
         Map<String, Integer> filas = new HashMap<>();
+
+        // Retorna o tamanho das filas
         filas.put("CARTOES", atendimentoService.getTamanhoFilaCartoes());
         filas.put("EMPRESTIMOS", atendimentoService.getTamanhoFilaEmprestimos());
         filas.put("OUTROS", atendimentoService.getTamanhoFilaOutros());
@@ -41,6 +44,9 @@ public class DashboardController {
 
         // Retorna também os atendentes e seus status atuais
         resumo.put("atendentes", atendenteRepository.findAll());
+
+        // Retorna o histórico de atendimentos:
+        resumo.put("historico", atendimentoRepository.findAll());
 
         return resumo;
     }

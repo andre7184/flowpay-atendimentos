@@ -7,15 +7,15 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
-@Entity
+@Entity // Anota essa classe como uma entidade
 public class Atendente {
-    @Id
+    @Id // Anota esse campo como chave primária
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Anota esse campo como auto-increment
     
-    private String nome;
+    private String nome; // Anota esse campo como uma coluna
     
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // Anota esse campo como um enum
     private TimeAtendimento timeAtendimento;
     
     private Integer atendimentosAtivos = 0; // Máximo 3
@@ -28,12 +28,14 @@ public class Atendente {
 
     public void setNome(String nome) { this.nome = nome; }
 
+    // campo para o time de atendimento
     public TimeAtendimento getTimeAtendimento() { return timeAtendimento; }
 
     public void setTimeAtendimento(TimeAtendimento timeAtendimento) { this.timeAtendimento = timeAtendimento; }
 
     public Integer getAtendimentosAtivos() { return atendimentosAtivos; }
 
+    // campo para o total de atendimentos ativos
     public void setAtendimentosAtivos(Integer atendimentosAtivos) { this.atendimentosAtivos = atendimentosAtivos; }
 
 }

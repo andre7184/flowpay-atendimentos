@@ -9,7 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import java.time.LocalDateTime;
 
-@Entity
+@Entity // Anota essa classe como uma entidade
 public class Atendimento {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +39,7 @@ public class Atendimento {
     public void setStatus(String status) { this.status = status; }
     public Atendente getAtendente() { return atendente; }
     public void setAtendente(Atendente atendente) { this.atendente = atendente; }
-        public LocalDateTime getCriadoEm() { return criadoEm; }
+    public LocalDateTime getCriadoEm() { return criadoEm; }
     public void setCriadoEm(LocalDateTime criadoEm) { this.criadoEm = criadoEm; }
     public LocalDateTime getIniciadoEm() { return iniciadoEm; }
     public void setIniciadoEm(LocalDateTime iniciadoEm) { this.iniciadoEm = iniciadoEm; }

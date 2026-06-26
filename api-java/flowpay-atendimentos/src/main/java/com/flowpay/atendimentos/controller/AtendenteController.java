@@ -9,18 +9,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/atendentes")
+@RestController // Anota essa classe como um Controller
+@RequestMapping("/api/atendentes") 
 @CrossOrigin(origins = "*") // Evita erro de CORS quando o Frontend chamar a API
 public class AtendenteController {
     
-    @Autowired
+    @Autowired // Injeta o repository aqui
     private AtendenteRepository repository;
 
-    @Autowired
+    @Autowired // Injeta o service aqui
     private AtendimentoService atendimentoService; // Injetamos o service aqui
 
-    @PostMapping
+    @PostMapping // Anota essa rota como POST
     public Atendente criar(@RequestBody Atendente atendente) {
         Atendente novoAtendente = repository.save(atendente);
 
@@ -30,12 +30,12 @@ public class AtendenteController {
         return novoAtendente;
     }
 
-    @GetMapping
+    @GetMapping // Anota essa rota como GET
     public List<Atendente> listar() {
         return repository.findAll();
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}") // Anota essa rota como DELETE
     public org.springframework.http.ResponseEntity<Void> excluir(@PathVariable Long id) {
         repository.deleteById(id);
         return org.springframework.http.ResponseEntity.noContent().build();
