@@ -105,6 +105,6 @@ cd api-java
 mvn test
 ```
 
-## Painel Web
+## Documentação do Painel Web
 
-<conteúdo do painel-web/README.md aqui>
+Veja mais detalhes em [painel-web/README.md](painel-web/README.md)
