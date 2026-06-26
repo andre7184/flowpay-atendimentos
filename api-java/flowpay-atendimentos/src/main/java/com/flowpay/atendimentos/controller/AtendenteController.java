@@ -5,40 +5,70 @@ import com.flowpay.atendimentos.repository.AtendenteRepository;
 import com.flowpay.atendimentos.service.AtendimentoService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController // Anota essa classe como um Controller
-@RequestMapping("/api/atendentes") 
-@CrossOrigin(origins = "*") // Evita erro de CORS quando o Frontend chamar a API
+@RestController
+@RequestMapping("/api/atendentes")
+@CrossOrigin(origins = "*")
 public class AtendenteController {
     
-    @Autowired // Injeta o repository aqui
+    @Autowired
     private AtendenteRepository repository;
 
-    @Autowired // Injeta o service aqui
-    private AtendimentoService atendimentoService; // Injetamos o service aqui
+    @Autowired
+    private AtendimentoService atendimentoService;
 
-    @PostMapping // Anota essa rota como POST
+    @PostMapping
     public Atendente criar(@RequestBody Atendente atendente) {
+        // Garante que todo novo atendente cadastrado já nasça ativo
+        atendente.setAtivo(true);
         Atendente novoAtendente = repository.save(atendente);
 
-        // Avisa o sistema para olhar se tem alguém esperando no time desse novo atendente!
-        atendimentoService.processarFilaParaNovoAtendente(novoAtendente.getTimeAtendimento());
+        // Avisa o sistema para olhar se tem alguém esperando na fila desse novo atendente
+        atendimentoService.processarFilaParaAtendenteDisponivel(novoAtendente.getTimeAtendimento());
         
         return novoAtendente;
     }
 
-    @GetMapping // Anota essa rota como GET
+    @GetMapping
     public List<Atendente> listar() {
         return repository.findAll();
     }
 
-    @DeleteMapping("/{id}") // Anota essa rota como DELETE
-    public org.springframework.http.ResponseEntity<Void> excluir(@PathVariable Long id) {
-        repository.deleteById(id);
-        return org.springframework.http.ResponseEntity.noContent().build();
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(@PathVariable Long id) {
+        repository.findById(id).ifPresent(atendente -> {
+            atendente.setAtivo(false);
+            
+            // Limpa a mesa do atendente antes de excluí-lo (desativá-lo)
+            atendimentoService.encerrarAtendimentosDeAtendenteDesativado(atendente);
+            
+            repository.save(atendente);
+        });
+        
+        return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> alterarStatus(@PathVariable Long id) {
+        repository.findById(id).ifPresent(atendente -> {
+            boolean novoStatus = !atendente.getAtivo();
+            atendente.setAtivo(novoStatus);
+
+            if (novoStatus) {
+                // Se foi ATIVADO: salva e tenta puxar clientes da fila para ele
+                repository.save(atendente);
+                atendimentoService.processarFilaParaAtendenteDisponivel(atendente.getTimeAtendimento());
+            } else {
+                // Se foi DESATIVADO: encerra os ativos em cascata e salva
+                atendimentoService.encerrarAtendimentosDeAtendenteDesativado(atendente);
+                repository.save(atendente);
+            }
+        });
+        
+        return ResponseEntity.noContent().build();
+    }
 }

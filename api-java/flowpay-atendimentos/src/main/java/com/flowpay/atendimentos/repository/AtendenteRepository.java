@@ -5,12 +5,16 @@ import com.flowpay.atendimentos.model.TimeAtendimento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface AtendenteRepository extends JpaRepository<Atendente, Long> {
     
-    // Busca atendentes de um time específico que tenham menos de 3 atendimentos ativos
-    Optional<Atendente> findFirstByTimeAtendimentoAndAtendimentosAtivosLessThanOrderByAtendimentosAtivosAsc(
+    // NOVO: Retorna a lista apenas de quem está ativo
+    List<Atendente> findByAtivoTrue();
+
+    // ATUALIZADO: Agora o algoritmo de fila só procura quem está com Ativo = True
+    Optional<Atendente> findFirstByTimeAtendimentoAndAtivoTrueAndAtendimentosAtivosLessThanOrderByAtendimentosAtivosAsc(
             TimeAtendimento timeAtendimento, Integer maxAtendimentos);
 }

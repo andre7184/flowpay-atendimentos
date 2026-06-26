@@ -13,6 +13,8 @@ public class Atendente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // Anota esse campo como auto-increment
     
+    private Boolean ativo = true;
+
     private String nome; // Anota esse campo como uma coluna
     
     @Enumerated(EnumType.STRING) // Anota esse campo como um enum
@@ -23,6 +25,10 @@ public class Atendente {
     public Long getId() { return id; }
 
     public void setId(Long id) { this.id = id; }
+
+    public Boolean getAtivo() { return ativo; }
+    
+    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
 
     public String getNome() { return nome; }
 

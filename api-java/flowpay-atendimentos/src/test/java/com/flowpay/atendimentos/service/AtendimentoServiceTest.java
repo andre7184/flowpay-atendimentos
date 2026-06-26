@@ -58,7 +58,7 @@ public class AtendimentoServiceTest {
         // Quando o service tentar salvar, retornamos o próprio objeto passado
         when(atendimentoRepository.save(any(Atendimento.class))).thenAnswer(i -> i.getArgument(0));
         // Simulamos que a query de busca por atendente livre encontrou o nosso João
-        when(atendenteRepository.findFirstByTimeAtendimentoAndAtendimentosAtivosLessThanOrderByAtendimentosAtivosAsc(
+        when(atendenteRepository.findFirstByTimeAtendimentoAndAtivoTrueAndAtendimentosAtivosLessThanOrderByAtendimentosAtivosAsc(
                 TimeAtendimento.CARTOES, 3)).thenReturn(Optional.of(atendenteMock));
 
         // Act (Ação)
@@ -77,7 +77,7 @@ public class AtendimentoServiceTest {
         // Arrange
         when(atendimentoRepository.save(any(Atendimento.class))).thenAnswer(i -> i.getArgument(0));
         // Simulamos que a query retornou vazio (nenhum atendente com espaço ou disponível)
-        when(atendenteRepository.findFirstByTimeAtendimentoAndAtendimentosAtivosLessThanOrderByAtendimentosAtivosAsc(
+        when(atendenteRepository.findFirstByTimeAtendimentoAndAtivoTrueAndAtendimentosAtivosLessThanOrderByAtendimentosAtivosAsc(
                 TimeAtendimento.CARTOES, 3)).thenReturn(Optional.empty());
 
         // Act
