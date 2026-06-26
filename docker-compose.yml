@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flowpay-api
+    ports:
+      - "8080:8080"
+    networks:
+      - flowpay-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./painel-web
+      dockerfile: Dockerfile
+    container_name: flowpay-painel
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - flowpay-network
+    restart: unless-stopped
+
+networks:
+  flowpay-network:
+    driver: bridge
