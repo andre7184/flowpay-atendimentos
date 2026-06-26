@@ -74,27 +74,39 @@ TOKEN PARA TESTES: token-flowpay-teste
 - Key: Authorization
 - Value: Bearer token-flowpay-teste
 
-Principais Endpoints:
+## 🔌 Referência da API REST
 
-- GET /api/dashboard - Retorna o consolidado de métricas, atendentes e filas.
+A API foi projetada para garantir a integridade referencial do banco de dados e a manutenção do histórico de métricas (SLA). Por isso, a exclusão de registros essenciais utiliza o padrão de **Soft Delete** (Inativação Lógica).
 
-- POST /api/atendentes - Cadastra um novo profissional.
-  ```json
-  {
-    "nome": "Ana Maria",
-    "timeAtendimento": "EMPRESTIMOS"
-  }
-  ```
-- POST /api/atendimentos - Cadastra um novo atendimento.
-  ```json
-  {
-    "assunto": "Nova Solicitacao",
-    "time": "EMPRESTIMOS"
-  }
-  ```
-- POST /api/atendimentos/{id}/finalizar - Encerra o chamado e aciona a fila.
+### 👥 Gestão de Atendentes (`/api/atendentes`)
 
-- DELETE /api/atendentes/{id} - Remove um atendente(somente se nao houver atendimentos ativos).
+- **`POST /`**
+  - **Descrição:** Cadastra um novo profissional. O sistema automaticamente o define como ativo (`ativo: true`).
+  - **Gatilho Automático:** Assim que criado, o serviço verifica se há clientes na fila do seu respectivo time e já atribui até 3 chamados para ele.
+
+- **`GET /`**
+  - **Descrição:** Retorna a lista completa de atendentes, incluindo ativos e inativos, para a interface de administração. _(Nota: O resumo geral do painel filtra apenas os ativos)._
+
+- **`DELETE /{id}`**
+  - **Descrição:** Executa a inativação lógica do profissional (Soft Delete), preservando os registros de histórico e estatísticas.
+  - **Gatilho de Cascata:** Ao inativar, o sistema busca todos os tickets que estavam `EM_ATENDIMENTO` com este profissional e os finaliza automaticamente, evitando que os chamados fiquem retidos ("órfãos") no banco de dados.
+
+- **`PATCH /{id}/status`**
+  - **Descrição:** Alterna (_toggle_) o status do profissional entre Ativo e Inativo.
+  - **Gatilho Automático:** \* Se alterado para **Inativo**: Aciona a mesma regra de cascata do `DELETE` para encerrar atendimentos em andamento.
+    - Se alterado para **Ativo**: Aciona o serviço de filas para resgatar até 3 tickets que estejam aguardando atendimento no time do profissional.
+
+---
+
+### 🎟️ Gestão de Atendimentos (`/api/atendimentos`)
+
+- **`POST /`**
+  - **Descrição:** Cria um novo ticket (simulação de cliente) no status `AGUARDANDO`.
+  - **Gatilho Automático:** O algoritmo de distribuição (_Round-Robin_ baseado em ociosidade) tenta alocar o ticket para o atendente ativo do time solicitado que tiver a menor carga de trabalho. Se todos estiverem lotados, o ticket permanece na fila.
+
+- **`POST /{id}/finalizar`**
+  - **Descrição:** Encerra um ticket em andamento, carimbando a data/hora final para cálculo de SLA de duração.
+  - **Gatilho Automático:** Libera espaço na "mesa" do atendente (reduz a ocupação) e automaticamente puxa o próximo ticket aguardando na fila daquele mesmo time.
 
 ## 🧪 Testes Unitários automatizados
 
