@@ -69,10 +69,10 @@ Caso queira rodar os serviços fora do Docker:
 ## 🔒 Autenticação e Uso da API
 
 Para interagir com a API utilizando ferramentas como Postman ou Insomnia, é necessário enviar o token de autorização no cabeçalho (Header) da requisição:
-TOKEN PARA TESTES: flowpay-teste-pleno-2026
+TOKEN PARA TESTES: token-flowpay-teste
 
 - Key: Authorization
-- Value: Bearer flowpay-teste-pleno-2026
+- Value: Bearer token-flowpay-teste
 
 Principais Endpoints:
 
@@ -104,3 +104,7 @@ O core de distribuição e gerenciamento de filas no AtendimentoService está co
 cd api-java
 mvn test
 ```
+
+## Painel Web
+
+<conteúdo do painel-web/README.md aqui>
