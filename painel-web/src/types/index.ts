@@ -5,6 +5,7 @@ export interface Atendente {
   nome: string;
   timeAtendimento: string;
   atendimentosAtivos: number;
+  ativo?: boolean; // <-- Novo campo adicionado
 }
 
 export interface Atendimento {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { flowpayService } from "../services/flowpayService";
-import type { ResumoDashboard, Atendimento } from "../types";
+import type { ResumoDashboard, Atendimento, Atendente } from "../types";
 import { InfoCard } from "../components/InfoCard";
 
 export default function Dashboard() {
@@ -19,6 +19,7 @@ export default function Dashboard() {
     useState(false);
   const [modalGerenciarAtendimentos, setModalGerenciarAtendimentos] =
     useState(false);
+  const [listaAtendentes, setListaAtendentes] = useState<Atendente[]>([]);
 
   const [formAtendente, setFormAtendente] = useState({
     nome: "",
@@ -131,10 +132,6 @@ export default function Dashboard() {
     );
   };
 
-  const handleExcluirAtendente = (id: number) => {
-    handleAction(flowpayService.excluirAtendente(id), "Atendente excluído!");
-  };
-
   const handleEncerrarAtendimento = (id: number) => {
     handleAction(
       flowpayService.encerrarAtendimento(id),
@@ -152,6 +149,27 @@ export default function Dashboard() {
       console.error(error);
       mostrarAlerta("Erro ao buscar atendimentos.", "erro");
     }
+  };
+
+  // Busca todos os atendentes para o modal
+  const abrirModalAtendentes = async () => {
+    try {
+      const { data } = await flowpayService.getAtendentes();
+      setListaAtendentes(data);
+      setModalGerenciarAtendentes(true);
+    } catch (error) {
+      console.error(error);
+      mostrarAlerta("Erro ao buscar atendentes.", "erro");
+    }
+  };
+
+  // Chama a nova rota de Ligar/Desligar
+  const handleAlternarStatus = (id: number) => {
+    handleAction(
+      flowpayService.alternarStatusAtendente(id),
+      "Status atualizado com sucesso!",
+      abrirModalAtendentes, // Atualiza o modal logo em seguida
+    );
   };
 
   return (
@@ -202,7 +220,7 @@ export default function Dashboard() {
             + Novo Atendente
           </button>
           <button
-            onClick={() => setModalGerenciarAtendentes(true)}
+            onClick={abrirModalAtendentes}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium shadow-sm transition-colors cursor-pointer"
           >
             👥 Gerenciar Atendentes
@@ -277,6 +295,9 @@ export default function Dashboard() {
                 Time
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-slate-400 uppercase">
                 Ocupação (Máx 3)
               </th>
             </tr>
@@ -305,6 +326,13 @@ export default function Dashboard() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-400">
                     {atendente.timeAtendimento}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 text-xs rounded font-bold ${atendente.ativo ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"}`}
+                    >
+                      {atendente.ativo ? "ATIVO" : "INATIVO"}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -544,34 +572,41 @@ export default function Dashboard() {
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-6 w-150 max-h-[80vh] overflow-y-auto border dark:border-slate-700">
             <div className="flex justify-between mb-4">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                Excluir Atendentes
+                Gerenciar Atendentes
               </h3>
               <button
                 onClick={() => setModalGerenciarAtendentes(false)}
-                className="cursor-pointer text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white font-bold mouse-pointer"
+                className="text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-white font-bold cursor-pointer"
               >
                 X
               </button>
             </div>
             <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
               <tbody>
-                {resumo.atendentes.map((at) => (
+                {listaAtendentes.map((at) => (
                   <tr
                     key={at.id}
                     className="border-t border-gray-200 dark:border-slate-700"
                   >
-                    <td className="py-2 text-gray-500 dark:text-slate-400">
+                    <td className="py-3 text-gray-500 dark:text-slate-400">
                       #{at.id}
                     </td>
-                    <td className="py-2 text-gray-900 dark:text-white">
+                    <td className="py-3 text-gray-900 dark:text-white font-medium">
                       {at.nome}
                     </td>
-                    <td className="py-2 text-right">
-                      <button
-                        onClick={() => handleExcluirAtendente(at.id)}
-                        className="cursor-pointer bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600"
+                    <td className="py-3">
+                      <span
+                        className={`px-2 py-1 text-xs rounded font-bold ${at.ativo ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300" : "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"}`}
                       >
-                        Excluir
+                        {at.ativo ? "ATIVO" : "INATIVO"}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      <button
+                        onClick={() => handleAlternarStatus(at.id)}
+                        className={`px-3 py-1 rounded text-sm text-white font-medium transition-colors cursor-pointer ${at.ativo ? "bg-orange-500 hover:bg-orange-600" : "bg-blue-500 hover:bg-blue-600"}`}
+                      >
+                        {at.ativo ? "Desativar" : "Reativar"}
                       </button>
                     </td>
                   </tr>
